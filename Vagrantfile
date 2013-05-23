@@ -1,37 +1,11 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-
 Vagrant::Config.run do |config|
+  config.vm.box       = 'precise32'
+  config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
+  config.vm.host_name = 'rails-dev-box'
 
-  # base box and URL where to get it if not present
-  config.vm.box = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-  # make sure our apt sources are up to date...
-  config.vm.provision :shell, :inline => "apt-get update --fix-missing"
+  config.vm.forward_port 3000, 3000
 
-  # config for the appserver box, same name as .pp file.
-  config.vm.define "appserver" do |app|
-    # do not show a VirtualBox window 
-    app.vm.boot_mode = :gui
-    #app.vm.network :hostonly, "66.66.66.10"
-    # bridge the VM on the host's eth0 interface
-    # if eth0 does not exist then Vagrant will 
-    # prompt you to select an actual interface.
-    app.vm.network :bridged, :bridge => "en0"
-    #Puppet gets grumpy if the hostname is not a FQDN...
-    app.vm.host_name = "appserver00.local"
-
-    app.vm.provision :puppet do |puppet|
-
-      # change fqdn to give to change the vm virtual host
-      puppet.facter = { 
-        "fqdn" => "appserver00.local", 
-      }
-
-      puppet.module_path = "puppet/modules"
-      puppet.manifests_path = "puppet/manifests"
-      puppet.manifest_file = "appserver.pp"
-    end
-  end
-
+  config.vm.provision :puppet,
+    :manifests_path => 'puppet/manifests',
+    :module_path    => 'puppet/modules'
 end
